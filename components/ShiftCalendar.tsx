@@ -1,10 +1,9 @@
 import { format, isSameDay, parseISO } from "date-fns"
-import React, { useMemo, useState } from "react"
+import React, { useState } from "react"
 import { Pressable } from "react-native"
 import { Calendar } from "react-native-calendars"
-import { Card, Text, XStack, YStack, useTheme, useThemeName } from "tamagui"
+import { Card, H5, Text, XStack, YStack, useTheme, useThemeName } from "tamagui"
 import { useShifts } from "../contexts/ShiftContext"
-import { accentDark, accentLight } from "../themes"
 import { ShiftModal } from "./ShiftModal"
 
 interface ShiftCalendarProps {
@@ -23,34 +22,34 @@ export const ShiftCalendar: React.FC<ShiftCalendarProps> = ({
   const [modalDate, setModalDate] = useState<Date | null>(null)
   const [modalShift, setModalShift] = useState<any>(null)
 
-  // Prepare marked dates and custom day content
-  const markedDates = useMemo(() => {
-    const marks: Record<string, any> = {}
-    const accent =
-      themeName === "dark" ? accentDark.accent6 : accentLight.accent6
-    shifts.forEach((shift) => {
-      const dateStr = shift.date
-      marks[dateStr] = {
-        marked: true,
-        customStyles: {
-          container: { backgroundColor: accent, borderRadius: 8 },
-          text: { color: theme.color?.val ?? "#fff", fontWeight: "bold" },
-        },
-        shift,
-      }
-    })
-    // Highlight selected date
-    const sel = format(selectedDate, "yyyy-MM-dd")
-    marks[sel] = marks[sel] || {}
-    marks[sel].selected = true
-    marks[sel].selectedColor = accent
-    return marks
-  }, [shifts, selectedDate, themeName, theme])
+  // Prepare marked dates (no-op, only needed for Calendar API compatibility)
+  const markedDates = {}
 
   // Render custom day component
   const renderDay = (day: any) => {
     if (!day || !day.dateString) return null
     const dateStr = day.dateString
+    const todayStr = format(new Date(), "yyyy-MM-dd")
+    const isToday = dateStr === todayStr
+    const isSelected = isSameDay(parseISO(dateStr), selectedDate)
+    const hasShift = !!shifts.find((s) => s.date === dateStr)
+    let backgroundColor = undefined
+    let color: any = "$color"
+    let fontWeight: "bold" | "normal" = "normal"
+    if (isSelected) {
+      backgroundColor = theme.accent6?.val
+      color = "$accent11"
+      fontWeight = "bold"
+    } else if (isToday) {
+      color = theme.accent3?.val
+      fontWeight = "bold"
+      if (hasShift) {
+        backgroundColor = theme.purple7?.val
+      }
+    } else if (hasShift) {
+      backgroundColor = theme.purple7?.val
+      color = "$color" // fallback to theme color for Tamagui compatibility
+    }
     return (
       <Pressable
         onPress={() => handleDayPress({ dateString: dateStr })}
@@ -60,23 +59,12 @@ export const ShiftCalendar: React.FC<ShiftCalendarProps> = ({
           style={{
             alignItems: "center",
             justifyContent: "center",
-            height: 48,
-            backgroundColor: isSameDay(parseISO(dateStr), selectedDate)
-              ? theme.accent2?.val
-              : undefined,
-            borderRadius: isSameDay(parseISO(dateStr), selectedDate)
-              ? 8
-              : undefined,
+            height: 40,
+            width: 40,
+            backgroundColor,
+            borderRadius: backgroundColor ? "100%" : undefined,
           }}>
-          <Text
-            fontWeight={
-              isSameDay(parseISO(dateStr), selectedDate) ? "bold" : "normal"
-            }
-            color={
-              isSameDay(parseISO(dateStr), selectedDate)
-                ? "$accent10"
-                : "$color"
-            }>
+          <Text fontWeight={fontWeight} color={color}>
             {day.day}
           </Text>
         </YStack>
@@ -131,24 +119,42 @@ export const ShiftCalendar: React.FC<ShiftCalendarProps> = ({
         onDayPress={handleDayPress}
         onDayLongPress={handleDayLongPress}
         markedDates={markedDates}
+        markingType="custom"
         dayComponent={({ date }) => renderDay(date)}
         theme={{
           todayTextColor:
             theme.accent6?.val ??
-            (themeName === "dark" ? "#4dd0e1" : "#007aff"),
+            (themeName === "dark"
+              ? "hsla(190, 50%, 49%, 1)"
+              : "hsla(190, 50%, 55%, 1)"),
           selectedDayBackgroundColor:
             theme.accent6?.val ??
-            (themeName === "dark" ? "#4dd0e1" : "#007aff"),
+            (themeName === "dark"
+              ? "hsla(190, 50%, 49%, 1)"
+              : "hsla(190, 50%, 55%, 1)"),
           selectedDayTextColor:
-            theme.color?.val ?? (themeName === "dark" ? "#fff" : "#111"),
+            theme.color?.val ??
+            (themeName === "dark"
+              ? "hsla(0, 15%, 93%, 1)"
+              : "hsla(0, 15%, 15%, 1)"),
           dayTextColor:
-            theme.color?.val ?? (themeName === "dark" ? "#fff" : "#222"),
+            theme.color?.val ??
+            (themeName === "dark"
+              ? "hsla(0, 15%, 93%, 1)"
+              : "hsla(0, 15%, 15%, 1)"),
           textDisabledColor:
-            theme.gray8?.val ?? (themeName === "dark" ? "#888" : "#888"),
+            theme.gray9?.val ?? (themeName === "dark" ? "#888" : "#888"),
           monthTextColor:
-            theme.color?.val ?? (themeName === "dark" ? "#fff" : "#222"),
+            theme.color?.val ??
+            (themeName === "dark"
+              ? "hsla(0, 15%, 93%, 1)"
+              : "hsla(0, 15%, 15%, 1)"),
+
           arrowColor:
-            theme.accent6?.val ?? (themeName === "dark" ? "#fff" : "#007aff"),
+            theme.accent6?.val ??
+            (themeName === "dark"
+              ? "hsla(190, 50%, 49%, 1)"
+              : "hsla(190, 50%, 55%, 1)"),
           backgroundColor: "transparent",
           calendarBackground: "transparent",
         }}
@@ -177,60 +183,60 @@ export const ShiftCalendar: React.FC<ShiftCalendarProps> = ({
             })()
             const earnings = hours * (shift.hourlyRate || 0)
             return (
-              <Card
-                key={shift.id}
-                p="$3"
-                mb="$2"
-                background="$accent1"
-                borderColor="$accent6"
-                borderWidth={1}>
+              <Card key={shift.id} borderWidth={1} borderColor="$borderColor">
+                <Card.Header>
+                  <H5>Shift Details</H5>
+                </Card.Header>
+
                 <XStack
                   style={{
                     justifyContent: "space-between",
                     alignItems: "center",
-                  }}>
-                  <YStack>
-                    <Text fontWeight="bold" color="$accent10">
-                      Shift Details
-                    </Text>
-                    <Text color="$gray10">
+                  }}
+                  gap="$1"
+                  paddingInline="$4"
+                  marginBlockEnd="$4">
+                  <YStack gap="$1">
+                    <Text color="$purple11">
                       Start Time:{" "}
                       <Text fontWeight="bold" color="$color">
                         {shift.startTime}
                       </Text>
                     </Text>
-                    <Text color="$gray10">
+                    <Text color="$purple11">
                       End Time:{" "}
                       <Text fontWeight="bold" color="$color">
                         {shift.endTime}
                       </Text>
                     </Text>
-                    <Text color="$gray10">
+                    <Text color="$purple11">
                       Hours:{" "}
                       <Text fontWeight="bold" color="$color">
                         {hours.toFixed(2)}
                       </Text>
                     </Text>
-                    <Text color="$gray10">
+                    <Text color="$purple11">
                       Hourly Rate:{" "}
                       <Text fontWeight="bold" color="$color">
-                        ${shift.hourlyRate}
+                        ¥{shift.hourlyRate}
                       </Text>
                     </Text>
-                    <Text color="$gray10">
+                    <Text color="$purple11">
                       Earnings:{" "}
                       <Text fontWeight="bold" color="$color">
-                        ${earnings.toFixed(2)}
+                        ¥{earnings.toFixed(2)}
                       </Text>
                     </Text>
                   </YStack>
-                  <Text color="$gray10">{shift.notes}</Text>
+                  <Text color="$purple11">{shift.notes}</Text>
                 </XStack>
               </Card>
             )
           })}
         {shifts.filter((s) => isSameDay(parseISO(s.date), selectedDate))
-          .length === 0 && <Text color="$gray8">No shift for this day.</Text>}
+          .length === 0 && (
+          <Text color="$purple11">No shift for this day.</Text>
+        )}
       </YStack>
     </YStack>
   )

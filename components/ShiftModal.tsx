@@ -1,5 +1,5 @@
 import React from "react"
-import { Button, Dialog, Input, Text, XStack, YStack } from "tamagui"
+import { Button, Dialog, H5, Input, Text, XStack, YStack } from "tamagui"
 import { Shift } from "../types/shift"
 
 interface ShiftModalProps {
@@ -91,22 +91,20 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
             <YStack gap="$3">
               {shift && !editMode ? (
                 <>
-                  <Text fontWeight="bold" fontSize="$6" color="$accent10">
-                    Shift Details
-                  </Text>
-                  <Text color="$gray10">
+                  <H5>Shift Details</H5>
+                  <Text color="$purple9">
                     Date: <Text color="$color">{shift.date}</Text>
                   </Text>
-                  <Text color="$gray10">
+                  <Text color="$purple9">
                     Start: <Text color="$color">{shift.startTime}</Text>
                   </Text>
-                  <Text color="$gray10">
+                  <Text color="$purple9">
                     End: <Text color="$color">{shift.endTime}</Text>
                   </Text>
-                  <Text color="$gray10">
-                    Hourly Rate: <Text color="$color">${shift.hourlyRate}</Text>
+                  <Text color="$purple9">
+                    Hourly Rate: <Text color="$color">¥{shift.hourlyRate}</Text>
                   </Text>
-                  <Text color="$gray10">
+                  <Text color="$purple9">
                     Notes: <Text color="$color">{shift.notes || "-"}</Text>
                   </Text>
                   <XStack gap="$3" mt="$2">
@@ -125,17 +123,15 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
                 </>
               ) : (
                 <>
-                  <Text fontWeight="bold" fontSize="$6" color="$accent10">
-                    {shift ? "Edit Shift" : "Add Shift"}
-                  </Text>
-                  <Text color="$gray10">
+                  <H5>{shift ? "Edit Shift" : "Add Shift"}</H5>
+                  <Text color="$purple9">
                     Date:{" "}
                     <Text color="$color">
                       {date ? date.toISOString().slice(0, 10) : shift?.date}
                     </Text>
                   </Text>
                   <YStack gap="$2">
-                    <Text color="$gray10">Start Time</Text>
+                    <Text color="$purple9">Start Time</Text>
                     <Input
                       value={form.startTime}
                       onChangeText={(text) =>
@@ -143,11 +139,8 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
                       }
                       placeholder="e.g. 09:00"
                       mb="$2"
-                      background="$accent2"
-                      color="$color"
-                      borderColor="$accent6"
                     />
-                    <Text color="$gray10">End Time</Text>
+                    <Text color="$purple9">End Time</Text>
                     <Input
                       value={form.endTime}
                       onChangeText={(text) =>
@@ -155,11 +148,8 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
                       }
                       placeholder="e.g. 17:00"
                       mb="$2"
-                      background="$accent2"
-                      color="$color"
-                      borderColor="$accent6"
                     />
-                    <Text color="$gray10">Hourly Rate</Text>
+                    <Text color="$purple9">Hourly Rate</Text>
                     <Input
                       value={form.hourlyRate}
                       onChangeText={(text) =>
@@ -168,11 +158,8 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
                       placeholder="e.g. 15"
                       keyboardType="numeric"
                       mb="$2"
-                      background="$accent2"
-                      color="$color"
-                      borderColor="$accent6"
                     />
-                    <Text color="$gray10">Notes</Text>
+                    <Text color="$purple9">Notes</Text>
                     <Input
                       value={form.notes}
                       onChangeText={(text) =>
@@ -180,16 +167,13 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
                       }
                       placeholder="Optional notes"
                       mb="$2"
-                      background="$accent2"
-                      color="$color"
-                      borderColor="$accent6"
                     />
                   </YStack>
                   {error && <Text color="$red10">{error}</Text>}
                   <XStack gap="$3" mt="$2">
                     {shift ? (
                       <>
-                        <Button onPress={handleSave} theme="green">
+                        <Button onPress={handleSave} theme="accent">
                           Save
                         </Button>
                         <Button
@@ -197,12 +181,12 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
                             setEditMode(false)
                             onClose()
                           }}
-                          theme="gray">
+                          theme="red">
                           Cancel
                         </Button>
                       </>
                     ) : (
-                      <Button onPress={handleAdd} theme="green">
+                      <Button onPress={handleAdd} theme="accent">
                         Add
                       </Button>
                     )}

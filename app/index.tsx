@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { ScrollView, Text, YStack } from "tamagui"
 import { ShiftCalendar } from "../components/ShiftCalendar"
-import { StatCard } from "../components/ShiftComponents"
+import { StatCard } from "../components/StatCard"
 import { ShiftProvider, useShifts } from "../contexts/ShiftContext"
 
 export default function Index() {
@@ -35,7 +35,7 @@ function HomeScreen() {
           <StatCard
             label="Today's Earnings"
             value={stats.dailyEarnings.toFixed(2)}
-            unit="$"
+            unit="¥"
           />
           <StatCard
             label="This Week's Hours"
@@ -45,7 +45,7 @@ function HomeScreen() {
           <StatCard
             label="This Week's Earnings"
             value={stats.weeklyEarnings.toFixed(2)}
-            unit="$"
+            unit="¥"
           />
           <StatCard
             label="This Month's Hours"
@@ -55,7 +55,7 @@ function HomeScreen() {
           <StatCard
             label="This Month's Earnings"
             value={stats.monthlyEarnings.toFixed(2)}
-            unit="$"
+            unit="¥"
           />
           <StatCard
             label="Total Hours"
@@ -65,7 +65,7 @@ function HomeScreen() {
           <StatCard
             label="Total Earnings"
             value={stats.totalEarnings.toFixed(2)}
-            unit="$"
+            unit="¥"
           />
         </YStack>
       </YStack>
