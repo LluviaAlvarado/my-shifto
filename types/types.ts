@@ -24,3 +24,10 @@ export interface DateRange {
   startDate: Date
   endDate: Date
 }
+
+export interface Settings {
+  currency: string
+  defaultHourlyRate: number
+  weekStartDay: number
+  theme: string
+}

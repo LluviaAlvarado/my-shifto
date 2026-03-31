@@ -1,6 +1,6 @@
-import React from "react"
+import { useEffect, useState } from "react"
 import { Button, Dialog, H5, Input, Text, XStack, YStack } from "tamagui"
-import { Shift } from "../types/shift"
+import { Shift } from "../types/types"
 
 interface ShiftModalProps {
   visible: boolean
@@ -12,7 +12,7 @@ interface ShiftModalProps {
   onDelete?: () => void
 }
 
-export const ShiftModal: React.FC<ShiftModalProps> = ({
+export const ShiftModal = ({
   visible,
   shift,
   date,
@@ -20,17 +20,17 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
   onAdd,
   onEdit,
   onDelete,
-}) => {
-  const [form, setForm] = React.useState({
+}: ShiftModalProps) => {
+  const [form, setForm] = useState({
     startTime: "",
     endTime: "",
     hourlyRate: "",
     notes: "",
   })
-  const [editMode, setEditMode] = React.useState(false)
-  const [error, setError] = React.useState("")
+  const [editMode, setEditMode] = useState(false)
+  const [error, setError] = useState("")
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (shift) {
       setForm({
         startTime: shift.startTime,
@@ -155,7 +155,7 @@ export const ShiftModal: React.FC<ShiftModalProps> = ({
                       onChangeText={(text) =>
                         setForm((f) => ({ ...f, hourlyRate: text }))
                       }
-                      placeholder="e.g. 15"
+                      placeholder="e.g. 1122"
                       keyboardType="numeric"
                       mb="$2"
                     />

@@ -1,4 +1,4 @@
-import React from "react"
+import { FC } from "react"
 import { Card, Label, Text, useThemeName, XStack, YStack } from "tamagui"
 
 interface StatCardProps {
@@ -8,12 +8,7 @@ interface StatCardProps {
   icon?: React.ReactNode
 }
 
-export const StatCard: React.FC<StatCardProps> = ({
-  label,
-  value,
-  unit,
-  icon,
-}) => {
+export const StatCard: FC<StatCardProps> = ({ label, value, unit, icon }) => {
   const theme = useThemeName()
   return (
     <Card
@@ -26,10 +21,15 @@ export const StatCard: React.FC<StatCardProps> = ({
         <YStack flex={1}>
           <Label color="$color">{label}</Label>
           <XStack style={{ alignItems: "baseline" }} gap="$2">
+            {unit! !== "h" && (
+              <Text fontSize="$3" color="$purple10">
+                {unit}
+              </Text>
+            )}
             <Text fontSize="$6" fontWeight="bold" color="$accent5">
               {value}
             </Text>
-            {unit && (
+            {unit! === "h" && (
               <Text fontSize="$3" color="$purple10">
                 {unit}
               </Text>

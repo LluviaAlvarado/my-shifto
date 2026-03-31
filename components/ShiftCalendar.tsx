@@ -1,5 +1,5 @@
 import { format, isSameDay, parseISO } from "date-fns"
-import React, { useState } from "react"
+import { useState } from "react"
 import { Pressable } from "react-native"
 import { Calendar } from "react-native-calendars"
 import { Card, H5, Text, XStack, YStack, useTheme, useThemeName } from "tamagui"
@@ -11,10 +11,10 @@ interface ShiftCalendarProps {
   onDateSelected: (date: Date) => void
 }
 
-export const ShiftCalendar: React.FC<ShiftCalendarProps> = ({
+export const ShiftCalendar = ({
   selectedDate,
   onDateSelected,
-}) => {
+}: ShiftCalendarProps) => {
   const { shifts, addShift, updateShift, deleteShift } = useShifts()
   const themeName = useThemeName()
   const theme = useTheme()
@@ -74,7 +74,6 @@ export const ShiftCalendar: React.FC<ShiftCalendarProps> = ({
 
   // Handle day press: open modal, set date, set shift if exists
   const handleDayPress = (dateObj: any) => {
-    console.log(theme)
     const date = parseISO(dateObj.dateString)
     onDateSelected(date)
   }

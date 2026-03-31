@@ -1,20 +1,19 @@
+import { useSettings } from "@/contexts/SettingsContext"
 import { useState } from "react"
 import { ScrollView, Text, YStack } from "tamagui"
 import { ShiftCalendar } from "../components/ShiftCalendar"
 import { StatCard } from "../components/StatCard"
-import { ShiftProvider, useShifts } from "../contexts/ShiftContext"
+import { useShifts } from "../contexts/ShiftContext"
 
 export default function Index() {
-  return (
-    <ShiftProvider>
-      <HomeScreen />
-    </ShiftProvider>
-  )
+  return <HomeScreen />
 }
 
 function HomeScreen() {
+  const { getSettings } = useSettings()
   const { getStats, loading } = useShifts()
   const stats = getStats()
+  const settings = getSettings()
   const [selectedDate, setSelectedDate] = useState(new Date())
 
   if (loading) return <Text color="$accent10">Loading...</Text>
@@ -35,7 +34,7 @@ function HomeScreen() {
           <StatCard
             label="Today's Earnings"
             value={stats.dailyEarnings.toFixed(2)}
-            unit="¥"
+            unit={settings.currency}
           />
           <StatCard
             label="This Week's Hours"
@@ -45,7 +44,7 @@ function HomeScreen() {
           <StatCard
             label="This Week's Earnings"
             value={stats.weeklyEarnings.toFixed(2)}
-            unit="¥"
+            unit={settings.currency}
           />
           <StatCard
             label="This Month's Hours"
@@ -55,7 +54,7 @@ function HomeScreen() {
           <StatCard
             label="This Month's Earnings"
             value={stats.monthlyEarnings.toFixed(2)}
-            unit="¥"
+            unit={settings.currency}
           />
           <StatCard
             label="Total Hours"
@@ -65,7 +64,7 @@ function HomeScreen() {
           <StatCard
             label="Total Earnings"
             value={stats.totalEarnings.toFixed(2)}
-            unit="¥"
+            unit={settings.currency}
           />
         </YStack>
       </YStack>

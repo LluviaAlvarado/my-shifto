@@ -1,7 +1,22 @@
-import { Shift, ShiftStats } from '@/types/shift'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { endOfDay, endOfMonth, endOfWeek, isWithinInterval, parseISO, startOfDay, startOfMonth, startOfWeek } from 'date-fns'
-import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react'
+import { Shift, ShiftStats } from "@/types/types"
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import {
+    endOfDay,
+    endOfMonth,
+    endOfWeek,
+    isWithinInterval,
+    parseISO,
+    startOfDay,
+    startOfMonth,
+    startOfWeek,
+} from "date-fns"
+import React, {
+    createContext,
+    ReactNode,
+    useContext,
+    useEffect,
+    useState,
+} from "react"
 
 interface ShiftContextType {
   shifts: Shift[]
@@ -17,10 +32,12 @@ interface ShiftContextType {
 
 const ShiftContext = createContext<ShiftContextType | undefined>(undefined)
 
-export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [shifts, setShifts] = useState<Shift[]>([])
   const [loading, setLoading] = useState(true)
-  const [defaultHourlyRate, setDefaultHourlyRateState] = useState(15)
+  const [defaultHourlyRate, setDefaultHourlyRateState] = useState(1122)
 
   // Load shifts and settings from AsyncStorage on mount
   useEffect(() => {
@@ -30,8 +47,8 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const loadData = async () => {
     try {
       const [shiftsData, rateData] = await Promise.all([
-        AsyncStorage.getItem('shifts'),
-        AsyncStorage.getItem('defaultHourlyRate'),
+        AsyncStorage.getItem("shifts"),
+        AsyncStorage.getItem("@settings_defaultHourlyRate"),
       ])
       if (shiftsData) {
         setShifts(JSON.parse(shiftsData))
@@ -40,7 +57,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setDefaultHourlyRateState(JSON.parse(rateData))
       }
     } catch (error) {
-      console.error('Error loading data:', error)
+      console.error("Error loading data:", error)
     } finally {
       setLoading(false)
     }
@@ -48,10 +65,10 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const saveShifts = async (newShifts: Shift[]) => {
     try {
-      await AsyncStorage.setItem('shifts', JSON.stringify(newShifts))
+      await AsyncStorage.setItem("shifts", JSON.stringify(newShifts))
       setShifts(newShifts)
     } catch (error) {
-      console.error('Error saving shifts:', error)
+      console.error("Error saving shifts:", error)
     }
   }
 
@@ -61,7 +78,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }
 
   const updateShift = async (id: string, updates: Partial<Shift>) => {
-    const newShifts = shifts.map(shift =>
+    const newShifts = shifts.map((shift) =>
       shift.id === id
         ? { ...shift, ...updates, updatedAt: new Date().toISOString() }
         : shift
@@ -70,14 +87,18 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }
 
   const deleteShift = async (id: string) => {
-    const newShifts = shifts.filter(shift => shift.id !== id)
+    const newShifts = shifts.filter((shift) => shift.id !== id)
     await saveShifts(newShifts)
   }
 
-  const getShifts = (filters?: { date?: Date; week?: Date; month?: Date }): Shift[] => {
+  const getShifts = (filters?: {
+    date?: Date
+    week?: Date
+    month?: Date
+  }): Shift[] => {
     if (!filters) return shifts
 
-    return shifts.filter(shift => {
+    return shifts.filter(async (shift) => {
       const shiftDate = parseISO(shift.date)
 
       if (filters.date) {
@@ -87,8 +108,14 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
 
       if (filters.week) {
-        const start = startOfWeek(filters.week)
-        const end = endOfWeek(filters.week)
+        // adapt to saved start of week
+        const savedWeekStart = await AsyncStorage.getItem("weekStartDay")
+        const weekStart = savedWeekStart
+          ? (parseInt(savedWeekStart) as 0 | 1 | 2 | 3 | 4 | 5 | 6)
+          : 1
+
+        const start = startOfWeek(filters.week, { weekStartsOn: weekStart })
+        const end = endOfWeek(filters.week, { weekStartsOn: weekStart })
         return isWithinInterval(shiftDate, { start, end })
       }
 
@@ -103,8 +130,8 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }
 
   const calculateHours = (startTime: string, endTime: string): number => {
-    const [startH, startM] = startTime.split(':').map(Number)
-    const [endH, endM] = endTime.split(':').map(Number)
+    const [startH, startM] = startTime.split(":").map(Number)
+    const [endH, endM] = endTime.split(":").map(Number)
     const startDate = new Date(2000, 0, 1, startH, startM)
     const endDate = new Date(2000, 0, 1, endH, endM)
     let hours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60)
@@ -151,10 +178,10 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const setDefaultHourlyRate = async (rate: number) => {
     try {
-      await AsyncStorage.setItem('defaultHourlyRate', JSON.stringify(rate))
+      await AsyncStorage.setItem("defaultHourlyRate", JSON.stringify(rate))
       setDefaultHourlyRateState(rate)
     } catch (error) {
-      console.error('Error saving hourly rate:', error)
+      console.error("Error saving hourly rate:", error)
     }
   }
 
@@ -170,8 +197,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         getStats,
         setDefaultHourlyRate,
         defaultHourlyRate,
-      }}
-    >
+      }}>
       {children}
     </ShiftContext.Provider>
   )
@@ -180,7 +206,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 export const useShifts = () => {
   const context = useContext(ShiftContext)
   if (!context) {
-    throw new Error('useShifts must be used within a ShiftProvider')
+    throw new Error("useShifts must be used within a ShiftProvider")
   }
   return context
 }

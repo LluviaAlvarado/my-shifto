@@ -16,6 +16,8 @@
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
+    "@tamagui/animations-css": "^2.0.0-rc.31",
+    "@tamagui/animations-react-native": "^2.0.0-rc.31",
     "@tamagui/babel-plugin": "^2.0.0-rc.31",
     "@tamagui/config": "^2.0.0-rc.31",
     "@tamagui/portal": "^2.0.0-rc.31",
