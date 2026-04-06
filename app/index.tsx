@@ -12,8 +12,8 @@ export default function Index() {
 function HomeScreen() {
   const { getSettings } = useSettings()
   const { getStats, loading } = useShifts()
-  const stats = getStats()
   const settings = getSettings()
+  const stats = getStats(new Date(), settings.weekStartDay)
   const [selectedDate, setSelectedDate] = useState(new Date())
 
   if (loading) return <Text color="$accent10">Loading...</Text>

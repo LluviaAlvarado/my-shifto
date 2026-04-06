@@ -1,21 +1,21 @@
 import { Shift, ShiftStats } from "@/types/types"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import {
-    endOfDay,
-    endOfMonth,
-    endOfWeek,
-    isWithinInterval,
-    parseISO,
-    startOfDay,
-    startOfMonth,
-    startOfWeek,
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  isWithinInterval,
+  parseISO,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
 } from "date-fns"
 import React, {
-    createContext,
-    ReactNode,
-    useContext,
-    useEffect,
-    useState,
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
 } from "react"
 
 interface ShiftContextType {
@@ -24,8 +24,8 @@ interface ShiftContextType {
   addShift: (shift: Shift) => Promise<void>
   updateShift: (id: string, shift: Partial<Shift>) => Promise<void>
   deleteShift: (id: string) => Promise<void>
-  getShifts: (filters?: { date?: Date; week?: Date; month?: Date }) => Shift[]
-  getStats: (date?: Date) => ShiftStats
+  getShifts: (filters?: { date?: Date; week?: Date; month?: Date }, weekStartDay?: number) => Shift[]
+  getStats: (date?: Date, weekStartDay?: number) => ShiftStats
   setDefaultHourlyRate: (rate: number) => Promise<void>
   defaultHourlyRate: number
 }
@@ -91,14 +91,13 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
     await saveShifts(newShifts)
   }
 
-  const getShifts = (filters?: {
-    date?: Date
-    week?: Date
-    month?: Date
-  }): Shift[] => {
+  const getShifts = (
+    filters?: { date?: Date; week?: Date; month?: Date },
+    weekStartDay: number = 1
+  ): Shift[] => {
     if (!filters) return shifts
 
-    return shifts.filter(async (shift) => {
+    return shifts.filter((shift) => {
       const shiftDate = parseISO(shift.date)
 
       if (filters.date) {
@@ -108,14 +107,8 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       if (filters.week) {
-        // adapt to saved start of week
-        const savedWeekStart = await AsyncStorage.getItem("weekStartDay")
-        const weekStart = savedWeekStart
-          ? (parseInt(savedWeekStart) as 0 | 1 | 2 | 3 | 4 | 5 | 6)
-          : 1
-
-        const start = startOfWeek(filters.week, { weekStartsOn: weekStart })
-        const end = endOfWeek(filters.week, { weekStartsOn: weekStart })
+        const start = startOfWeek(filters.week, { weekStartsOn: weekStartDay as 0 | 1 | 2 | 3 | 4 | 5 | 6 })
+        const end = endOfWeek(filters.week, { weekStartsOn: weekStartDay as 0 | 1 | 2 | 3 | 4 | 5 | 6 })
         return isWithinInterval(shiftDate, { start, end })
       }
 
@@ -140,9 +133,9 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
     return hours
   }
 
-  const getStats = (date: Date = new Date()): ShiftStats => {
+  const getStats = (date: Date = new Date(), weekStartDay: number = 1): ShiftStats => {
     const dailyShifts = getShifts({ date })
-    const weeklyShifts = getShifts({ week: date })
+    const weeklyShifts = getShifts({ week: date }, weekStartDay)
     const monthlyShifts = getShifts({ month: date })
 
     const calculateTotals = (shiftList: Shift[]) => {

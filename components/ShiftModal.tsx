@@ -1,3 +1,4 @@
+import { useSettings } from "@/contexts/SettingsContext"
 import { useEffect, useState } from "react"
 import { Button, Dialog, H5, Input, Text, XStack, YStack } from "tamagui"
 import { Shift } from "../types/types"
@@ -29,6 +30,8 @@ export const ShiftModal = ({
   })
   const [editMode, setEditMode] = useState(false)
   const [error, setError] = useState("")
+  const { getSettings } = useSettings()
+  const settings = getSettings()
 
   useEffect(() => {
     if (shift) {
@@ -102,7 +105,7 @@ export const ShiftModal = ({
                     End: <Text color="$color">{shift.endTime}</Text>
                   </Text>
                   <Text color="$purple9">
-                    Hourly Rate: <Text color="$color">¥{shift.hourlyRate}</Text>
+                    Hourly Rate: <Text color="$color">{ settings.currency + shift.hourlyRate}</Text>
                   </Text>
                   <Text color="$purple9">
                     Notes: <Text color="$color">{shift.notes || "-"}</Text>

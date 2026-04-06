@@ -1,3 +1,4 @@
+import { useSettings } from "@/contexts/SettingsContext"
 import { format, isSameDay, parseISO } from "date-fns"
 import { useState } from "react"
 import { Pressable } from "react-native"
@@ -21,6 +22,8 @@ export const ShiftCalendar = ({
   const [modalVisible, setModalVisible] = useState(false)
   const [modalDate, setModalDate] = useState<Date | null>(null)
   const [modalShift, setModalShift] = useState<any>(null)
+  const { getSettings } = useSettings()
+  const settings = getSettings()
 
   // Prepare marked dates (no-op, only needed for Calendar API compatibility)
   const markedDates = {}
@@ -217,13 +220,13 @@ export const ShiftCalendar = ({
                     <Text color="$purple11">
                       Hourly Rate:{" "}
                       <Text fontWeight="bold" color="$color">
-                        ¥{shift.hourlyRate}
+                        {settings.currency + shift.hourlyRate}
                       </Text>
                     </Text>
                     <Text color="$purple11">
                       Earnings:{" "}
                       <Text fontWeight="bold" color="$color">
-                        ¥{earnings.toFixed(2)}
+                        {settings.currency + earnings.toFixed(2)}
                       </Text>
                     </Text>
                   </YStack>
