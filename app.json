@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "my-shifto",
-    "slug": "my-shifto",
+    "slug": "myshifto",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -43,6 +43,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "afc18ba0-8662-4bc4-bc66-23c391f197f4"
+      }
+    },
+    "owner": "amika79s-organization"
   }
 }
