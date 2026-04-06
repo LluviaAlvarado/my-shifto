@@ -1,4 +1,5 @@
 import { useSettings } from "@/contexts/SettingsContext"
+import { isValidTime } from "@/utils/shiftUtils"
 import { useEffect, useState } from "react"
 import { Button, Dialog, H5, Input, Text, XStack, YStack } from "tamagui"
 import { Shift } from "../types/types"
@@ -43,15 +44,24 @@ export const ShiftModal = ({
       })
       setEditMode(false)
     } else {
-      setForm({ startTime: "", endTime: "", hourlyRate: "", notes: "" })
+      setForm({
+        startTime: "",
+        endTime: "",
+        hourlyRate: String(settings.defaultHourlyRate),
+        notes: "",
+      })
       setEditMode(true)
     }
     setError("")
-  }, [shift, date, visible])
+  }, [shift, date, visible, settings.defaultHourlyRate])
 
   const handleSave = () => {
     if (!form.startTime || !form.endTime || !form.hourlyRate) {
       setError("Start time, end time, and hourly rate are required.")
+      return
+    }
+    if (!isValidTime(form.startTime) || !isValidTime(form.endTime)) {
+      setError("Invalid time format. Please use HH:mm (00:00 to 23:59).")
       return
     }
     if (onEdit && shift) {
@@ -64,6 +74,10 @@ export const ShiftModal = ({
   const handleAdd = () => {
     if (!form.startTime || !form.endTime || !form.hourlyRate) {
       setError("Start time, end time, and hourly rate are required.")
+      return
+    }
+    if (!isValidTime(form.startTime) || !isValidTime(form.endTime)) {
+      setError("Invalid time format. Please use HH:mm (00:00 to 23:59).")
       return
     }
     if (onAdd) {
@@ -105,7 +119,10 @@ export const ShiftModal = ({
                     End: <Text color="$color">{shift.endTime}</Text>
                   </Text>
                   <Text color="$purple9">
-                    Hourly Rate: <Text color="$color">{ settings.currency + shift.hourlyRate}</Text>
+                    Hourly Rate:{" "}
+                    <Text color="$color">
+                      {settings.currency + shift.hourlyRate}
+                    </Text>
                   </Text>
                   <Text color="$purple9">
                     Notes: <Text color="$color">{shift.notes || "-"}</Text>

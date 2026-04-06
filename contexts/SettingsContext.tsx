@@ -13,6 +13,7 @@ interface SettingsContextType {
   loading: boolean
   getSettings: () => Settings
   saveSettings: (newSettings: Settings) => Promise<void>
+  setTheme: (theme: "light" | "dark") => void
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -25,6 +26,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     defaultHourlyRate: 1122,
     theme: "dark",
     weekStartDay: 1,
+    lateNightStart: "22:00",
+    lateNightRateIncrease: 25,
   })
   const [loading, setLoading] = useState(true)
 
@@ -59,6 +62,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     return settings
   }
 
+  const setTheme = (theme: "light" | "dark") => {
+    setSettings((prev) => ({ ...prev, theme }))
+    AsyncStorage.setItem("settings", JSON.stringify({ ...settings, theme }))
+  }
+
   return (
     <SettingsContext.Provider
       value={{
@@ -66,6 +74,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         loading,
         getSettings,
         saveSettings,
+        setTheme,
       }}>
       {children}
     </SettingsContext.Provider>

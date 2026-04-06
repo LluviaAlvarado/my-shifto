@@ -16,7 +16,15 @@ import { usePreferredColorScheme } from "../hooks/usePreferredColorScheme"
 import { tamaguiConfig } from "../tamagui.config"
 
 export default function RootLayout() {
-  const { theme, toggleTheme } = usePreferredColorScheme()
+  return (
+    <SettingsProvider>
+      <RootLayoutInner />
+    </SettingsProvider>
+  )
+}
+
+function RootLayoutInner() {
+  const { theme } = usePreferredColorScheme()
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
@@ -24,30 +32,25 @@ export default function RootLayout() {
       <TamaguiProvider config={tamaguiConfig} defaultTheme={theme!} key={theme}>
         <ThemeProvider value={theme === "dark" ? DarkTheme : DefaultTheme}>
           <PortalProvider>
-            <SettingsProvider>
-              <ShiftProvider>
-                <Stack>
-                  <Stack.Screen
-                    name="index"
-                    options={{
-                      title: "My Shifto",
-                      headerRight: () => (
-                        <Button
-                          chromeless
-                          onPress={() => {
-                            setSettingsOpen(true)
-                          }}>
-                          <AntDesign name="menu" size={16} color="$color" />
-                        </Button>
-                      ),
-                    }}></Stack.Screen>
-                </Stack>
-                <SettingsSheet
-                  open={settingsOpen}
-                  onOpenChange={setSettingsOpen}
+            <ShiftProvider>
+              <Stack>
+                <Stack.Screen
+                  name="index"
+                  options={{
+                    title: "My Shifto",
+                    headerRight: () => (
+                      <Button chromeless onPress={() => setSettingsOpen(true)}>
+                        <AntDesign name="menu" size={16} color="purple" />
+                      </Button>
+                    ),
+                  }}
                 />
-              </ShiftProvider>
-            </SettingsProvider>
+              </Stack>
+              <SettingsSheet
+                open={settingsOpen}
+                onOpenChange={setSettingsOpen}
+              />
+            </ShiftProvider>
           </PortalProvider>
         </ThemeProvider>
       </TamaguiProvider>

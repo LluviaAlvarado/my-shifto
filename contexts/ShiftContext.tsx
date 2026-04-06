@@ -1,4 +1,5 @@
 import { Shift, ShiftStats } from "@/types/types"
+import { calculateHours } from "@/utils/shiftUtils"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import {
   endOfDay,
@@ -17,6 +18,7 @@ import React, {
   useEffect,
   useState,
 } from "react"
+import { useSettings } from "./SettingsContext"
 
 interface ShiftContextType {
   shifts: Shift[]
@@ -24,8 +26,11 @@ interface ShiftContextType {
   addShift: (shift: Shift) => Promise<void>
   updateShift: (id: string, shift: Partial<Shift>) => Promise<void>
   deleteShift: (id: string) => Promise<void>
-  getShifts: (filters?: { date?: Date; week?: Date; month?: Date }, weekStartDay?: number) => Shift[]
-  getStats: (date?: Date, weekStartDay?: number) => ShiftStats
+  getShifts: (
+    filters?: { date?: Date; week?: Date; month?: Date },
+    weekStartDay?: number
+  ) => Shift[]
+  getStats: () => ShiftStats
   setDefaultHourlyRate: (rate: number) => Promise<void>
   defaultHourlyRate: number
 }
@@ -38,6 +43,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
   const [shifts, setShifts] = useState<Shift[]>([])
   const [loading, setLoading] = useState(true)
   const [defaultHourlyRate, setDefaultHourlyRateState] = useState(1122)
+  const { getSettings } = useSettings()
 
   // Load shifts and settings from AsyncStorage on mount
   useEffect(() => {
@@ -107,8 +113,12 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       if (filters.week) {
-        const start = startOfWeek(filters.week, { weekStartsOn: weekStartDay as 0 | 1 | 2 | 3 | 4 | 5 | 6 })
-        const end = endOfWeek(filters.week, { weekStartsOn: weekStartDay as 0 | 1 | 2 | 3 | 4 | 5 | 6 })
+        const start = startOfWeek(filters.week, {
+          weekStartsOn: weekStartDay as 0 | 1 | 2 | 3 | 4 | 5 | 6,
+        })
+        const end = endOfWeek(filters.week, {
+          weekStartsOn: weekStartDay as 0 | 1 | 2 | 3 | 4 | 5 | 6,
+        })
         return isWithinInterval(shiftDate, { start, end })
       }
 
@@ -122,30 +132,27 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
     })
   }
 
-  const calculateHours = (startTime: string, endTime: string): number => {
-    const [startH, startM] = startTime.split(":").map(Number)
-    const [endH, endM] = endTime.split(":").map(Number)
-    const startDate = new Date(2000, 0, 1, startH, startM)
-    const endDate = new Date(2000, 0, 1, endH, endM)
-    let hours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60)
-    // Handle overnight shifts
-    if (hours < 0) hours += 24
-    return hours
-  }
-
-  const getStats = (date: Date = new Date(), weekStartDay: number = 1): ShiftStats => {
+  const getStats = (): ShiftStats => {
+    const settings = getSettings()
+    const date: Date = new Date()
     const dailyShifts = getShifts({ date })
-    const weeklyShifts = getShifts({ week: date }, weekStartDay)
+    const weeklyShifts = getShifts({ week: date }, settings.weekStartDay)
     const monthlyShifts = getShifts({ month: date })
 
     const calculateTotals = (shiftList: Shift[]) => {
       return shiftList.reduce(
         (acc, shift) => {
-          const hours = calculateHours(shift.startTime, shift.endTime)
           const rate = shift.hourlyRate || defaultHourlyRate
+          const { hours, normalHours, extraEarnings } = calculateHours(
+            shift.startTime,
+            shift.endTime,
+            settings.lateNightStart,
+            settings.lateNightRateIncrease,
+            rate
+          )
           return {
             hours: acc.hours + hours,
-            earnings: acc.earnings + hours * rate,
+            earnings: acc.earnings + normalHours * rate + extraEarnings,
           }
         },
         { hours: 0, earnings: 0 }

@@ -1,4 +1,5 @@
 import { useSettings } from "@/contexts/SettingsContext"
+import { calculateHours } from "@/utils/shiftUtils"
 import { format, isSameDay, parseISO } from "date-fns"
 import { useState } from "react"
 import { Pressable } from "react-native"
@@ -176,14 +177,16 @@ export const ShiftCalendar = ({
         {shifts
           .filter((s) => isSameDay(parseISO(s.date), selectedDate))
           .map((shift) => {
-            const hours = (() => {
-              const [startH, startM] = shift.startTime.split(":").map(Number)
-              const [endH, endM] = shift.endTime.split(":").map(Number)
-              let h = endH + endM / 60 - (startH + startM / 60)
-              if (h < 0) h += 24
-              return h
-            })()
-            const earnings = hours * (shift.hourlyRate || 0)
+            const rate = shift.hourlyRate || settings.defaultHourlyRate
+            const { hours, normalHours, lateNightHours, extraEarnings } =
+              calculateHours(
+                shift.startTime,
+                shift.endTime,
+                settings.lateNightStart,
+                settings.lateNightRateIncrease,
+                rate
+              )
+            const earnings = normalHours * rate + extraEarnings
             return (
               <Card key={shift.id} borderWidth={1} borderColor="$borderColor">
                 <Card.Header>
@@ -215,6 +218,12 @@ export const ShiftCalendar = ({
                       Hours:{" "}
                       <Text fontWeight="bold" color="$color">
                         {hours.toFixed(2)}
+                      </Text>
+                    </Text>
+                    <Text color="$purple11">
+                      Late Night Hours:{" "}
+                      <Text fontWeight="bold" color="$color">
+                        {lateNightHours.toFixed(2)}
                       </Text>
                     </Text>
                     <Text color="$purple11">

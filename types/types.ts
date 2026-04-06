@@ -30,4 +30,6 @@ export interface Settings {
   defaultHourlyRate: number
   weekStartDay: number
   theme: string
+  lateNightStart: string // e.g. "22:00"
+  lateNightRateIncrease: number // e.g. 25 for 25%
 }

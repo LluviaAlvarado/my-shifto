@@ -1,4 +1,5 @@
 import { useSettings } from "@/contexts/SettingsContext"
+import { isValidTime } from "@/utils/shiftUtils"
 import AntDesign from "@expo/vector-icons/AntDesign"
 import { useState } from "react"
 import {
@@ -32,7 +33,7 @@ interface SettingsSheetProps {
 }
 
 export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
-  const { getSettings, saveSettings } = useSettings()
+  const { getSettings, saveSettings, setTheme } = useSettings()
   const settings = getSettings()
   const [currency, setCurrency] = useState(settings.currency)
   const [hourlyRate, setHourlyRate] = useState(
@@ -42,6 +43,32 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
   const [weekStartDay, setWeekStartDay] = useState(
     settings.weekStartDay.toString()
   )
+
+  const [lateNightStart, setLateNightStart] = useState(
+    settings.lateNightStart || "22:00"
+  )
+  const [lateNightRateIncrease, setLateNightRateIncrease] = useState(
+    settings.lateNightRateIncrease?.toString() || "0.25"
+  )
+  const [error, setError] = useState("")
+
+  const onLateNightStartChange = (hour: string) => {
+    setLateNightStart(hour)
+    if (!isValidTime(hour)) {
+      setError("Invalid time format. Please use HH:mm (00:00 to 23:59).")
+      return
+    } else {
+      setError("")
+    }
+    settings.lateNightStart = hour
+    saveSettings(settings)
+  }
+
+  const onLateNightRateIncreaseChange = (percentage: string) => {
+    setLateNightRateIncrease(percentage)
+    settings.lateNightRateIncrease = parseFloat(percentage)
+    saveSettings(settings)
+  }
 
   const onCurrencyChange = async (currency: string) => {
     setCurrency(currency)
@@ -64,7 +91,7 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
   const onThemeChange = async (dark: boolean) => {
     setIsDarkMode(dark)
     settings.theme = dark ? "dark" : "light"
-    saveSettings(settings)
+    setTheme(dark ? "dark" : "light")
   }
 
   // Common currency options
@@ -95,7 +122,7 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
                 Settings
               </Text>
               <Button chromeless onPress={() => onOpenChange(false)}>
-                <AntDesign name="close" size={16} color="$color" />
+                <AntDesign name="close" size={16} color="purple" />
               </Button>
             </XStack>
 
@@ -156,7 +183,7 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
               <Select
                 value={weekStartDay}
                 onValueChange={onDayChange}
-                disablePreventBodyScroll
+                // disablePreventBodyScroll
                 defaultValue="monday">
                 <Select.Trigger borderRadius="$4">
                   <Select.Value placeholder="Select day" />
@@ -192,7 +219,31 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
                 </Select.Content>
               </Select>
             </YStack>
-
+            {/* Late Night Settings */}
+            <YStack gap="$2">
+              <Text fontWeight="bold" color="$color">
+                Late Night Start Time
+              </Text>
+              <Input
+                value={lateNightStart}
+                onChangeText={onLateNightStartChange}
+                placeholder="e.g., 22:00"
+              />
+              {error && error !== "" && <Text color="$red10">{error}</Text>}
+              <Text fontWeight="bold" color="$color">
+                Late Night Rate Increase (%)
+              </Text>
+              <Input
+                value={lateNightRateIncrease}
+                onChangeText={onLateNightRateIncreaseChange}
+                placeholder="e.g., 25 for 25%"
+                keyboardType="numeric"
+              />
+              <Text fontSize="$3" color="$gray10">
+                Hours after this time will earn extra. Example: 25 means 25%
+                more per hour after 22:00.
+              </Text>
+            </YStack>
             {/* Theme Toggle */}
             <YStack gap="$2">
               <XStack
