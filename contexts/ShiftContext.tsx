@@ -30,6 +30,7 @@ interface ShiftContextType {
     filters?: { date?: Date; week?: Date; month?: Date },
     weekStartDay?: number
   ) => Shift[]
+  loadShifts: (newShifts: Shift[]) => Promise<void>
   getStats: () => ShiftStats
   defaultHourlyRate: number
 }
@@ -134,6 +135,11 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
     })
   }
 
+  const loadShifts = async (newShifts: Shift[]) => {
+    await AsyncStorage.setItem("shifts", JSON.stringify(newShifts))
+    setShifts(newShifts)
+  }
+
   const getStats = (): ShiftStats => {
     const settings = getSettings()
     const date: Date = new Date()
@@ -192,6 +198,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
         updateShift,
         deleteShift,
         getShifts,
+        loadShifts,
         getStats,
         defaultHourlyRate,
       }}>

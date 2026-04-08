@@ -55,15 +55,6 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const saveSettings = async (newSettings: Settings) => {
-    try {
-      await AsyncStorage.setItem("settings", JSON.stringify(newSettings))
-      setSettings(newSettings)
-    } catch (error) {
-      console.error("Error saving settings:", error)
-    }
-  }
-
   const getSettings = (): Settings => {
     return settings
   }
@@ -119,7 +110,6 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         settings,
         loading,
         getSettings,
-        saveSettings,
         setCurrency,
         setDefaultHourlyRate,
         setTheme,

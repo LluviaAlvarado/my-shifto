@@ -1,7 +1,12 @@
 import { useSettings } from "@/contexts/SettingsContext"
+import { useShifts } from "@/contexts/ShiftContext"
 import { isValidTime } from "@/utils/shiftUtils"
 import AntDesign from "@expo/vector-icons/AntDesign"
+import * as DocumentPicker from "expo-document-picker"
+import { File, Paths } from "expo-file-system"
+import * as Sharing from "expo-sharing"
 import { useState } from "react"
+import { Alert } from "react-native"
 import {
   Adapt,
   Button,
@@ -44,6 +49,7 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
     setTransportationCost,
   } = useSettings()
   const settings = getSettings()
+  const { shifts, loadShifts } = useShifts()
   const [hourlyRate, stHourlyRate] = useState(
     settings.defaultHourlyRate.toString()
   )
@@ -58,6 +64,62 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
   const [nightError, setNightError] = useState("")
   const [percentageError, setPercentageError] = useState("")
   const [transportationCostError, setTransportationCostError] = useState("")
+
+  const handleExport = async () => {
+    try {
+      const data = {
+        settings: getSettings(),
+        shifts,
+        exportedAt: new Date().toISOString(),
+      }
+      const fileName = `shifto-backup-${Date.now()}.json`
+      const file = new File(Paths.cache, fileName)
+      file.create()
+      file.write(JSON.stringify(data, null, 2))
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: "application/json",
+          dialogTitle: "Export Shifto Data",
+        })
+      }
+    } catch (e) {
+      Alert.alert(
+        "Export Failed",
+        "Could not export data. Please try again. Error details: " + e
+      )
+    }
+  }
+
+  const handleImport = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/json",
+        copyToCacheDirectory: true,
+      })
+      if (result.canceled || !result.assets?.[0]) return
+      const { uri } = result.assets[0]
+      const file = new File(uri)
+      const json = file.textSync()
+      const data = JSON.parse(json)
+      if (!data.settings || !data.shifts)
+        throw new Error("Invalid backup file.")
+      setCurrency(data.settings.currency)
+      setDefaultHourlyRate(data.settings.defaultHourlyRate)
+      setTheme(data.settings.theme)
+      setWeekStartDay(data.settings.weekStartDay)
+      setLateNightStart(data.settings.lateNightStart)
+      setLateNightRateIncrease(data.settings.lateNightRateIncrease)
+      setTransportationCost(data.settings.transportationCost)
+      await loadShifts(data.shifts)
+      Alert.alert("Import Successful", "Your data has been imported.")
+    } catch (e) {
+      Alert.alert(
+        "Import Failed",
+        "Could not import data. Please check your file and try again. Error details: " +
+          e
+      )
+    }
+  }
 
   const onCurrencyChange = async (currency: string) => {
     setCurrency(currency)
@@ -318,6 +380,15 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
               </XStack>
               <Text fontSize="$3" color="$gray10">
                 Toggle between light and dark theme
+              </Text>
+            </YStack>
+            {/* Data Export/Import */}
+            <YStack gap="$2" mt="$6">
+              <Button onPress={handleExport}>Export Data</Button>
+              <Button onPress={handleImport}>Import Data</Button>
+              <Text fontSize="$2" color="$gray10">
+                Export your shifts and settings to a file, or import a backup.
+                Import will overwrite all current data.
               </Text>
             </YStack>
           </YStack>
