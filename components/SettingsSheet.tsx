@@ -33,68 +33,96 @@ interface SettingsSheetProps {
 }
 
 export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
-  const { getSettings, saveSettings, setTheme } = useSettings()
+  const {
+    getSettings,
+    setCurrency,
+    setDefaultHourlyRate,
+    setTheme,
+    setWeekStartDay,
+    setLateNightStart,
+    setLateNightRateIncrease,
+    setTransportationCost,
+  } = useSettings()
   const settings = getSettings()
-  const [currency, setCurrency] = useState(settings.currency)
-  const [hourlyRate, setHourlyRate] = useState(
+  const [hourlyRate, stHourlyRate] = useState(
     settings.defaultHourlyRate.toString()
   )
-  const [isDarkMode, setIsDarkMode] = useState(settings.theme === "dark")
-  const [weekStartDay, setWeekStartDay] = useState(
-    settings.weekStartDay.toString()
+  const [lateNightStart, stLateNightStart] = useState(settings.lateNightStart)
+  const [lateNightRateIncrease, stLateNightRateIncrease] = useState(
+    settings.lateNightRateIncrease.toString()
   )
-
-  const [lateNightStart, setLateNightStart] = useState(
-    settings.lateNightStart || "22:00"
+  const [transportationCost, stTransportationCost] = useState(
+    settings.transportationCost.toString()
   )
-  const [lateNightRateIncrease, setLateNightRateIncrease] = useState(
-    settings.lateNightRateIncrease?.toString() || "0.25"
-  )
-  const [error, setError] = useState("")
-
-  const onLateNightStartChange = (hour: string) => {
-    setLateNightStart(hour)
-    if (!isValidTime(hour)) {
-      setError("Invalid time format. Please use HH:mm (00:00 to 23:59).")
-      return
-    } else {
-      setError("")
-    }
-    settings.lateNightStart = hour
-    saveSettings(settings)
-  }
-
-  const onLateNightRateIncreaseChange = (percentage: string) => {
-    setLateNightRateIncrease(percentage)
-    settings.lateNightRateIncrease = parseFloat(percentage)
-    saveSettings(settings)
-  }
+  const [rateError, setRateError] = useState("")
+  const [nightError, setNightError] = useState("")
+  const [percentageError, setPercentageError] = useState("")
+  const [transportationCostError, setTransportationCostError] = useState("")
 
   const onCurrencyChange = async (currency: string) => {
     setCurrency(currency)
-    settings.currency = currency
-    saveSettings(settings)
   }
 
   const onRateChange = async (rate: string) => {
-    setHourlyRate(rate)
-    settings.defaultHourlyRate = parseFloat(rate)
-    saveSettings(settings)
-  }
-
-  const onDayChange = async (day: string) => {
-    setWeekStartDay(day)
-    settings.weekStartDay = parseInt(day)
-    saveSettings(settings)
+    const ra = parseFloat(rate)
+    stHourlyRate(rate)
+    if (isNaN(ra) || ra < 0) {
+      setRateError("Please enter a valid number for hourly rate.")
+      return
+    } else {
+      setRateError("")
+    }
+    setDefaultHourlyRate(ra)
   }
 
   const onThemeChange = async (dark: boolean) => {
-    setIsDarkMode(dark)
     settings.theme = dark ? "dark" : "light"
     setTheme(dark ? "dark" : "light")
   }
 
-  // Common currency options
+  const onDayChange = async (day: string) => {
+    settings.weekStartDay = parseInt(day)
+    setWeekStartDay(parseInt(day))
+  }
+
+  const onLateNightStartChange = (hour: string) => {
+    stLateNightStart(hour)
+    if (!isValidTime(hour)) {
+      setNightError("Invalid time format. Please use HH:mm (00:00 to 23:59).")
+      return
+    } else {
+      setNightError("")
+    }
+    setLateNightStart(hour)
+  }
+
+  const onLateNightRateIncreaseChange = (percentage: string) => {
+    const perc = parseFloat(percentage)
+    stLateNightRateIncrease(percentage)
+    if (isNaN(perc) || perc < 0) {
+      setPercentageError("Please enter a valid percentage (e.g., 25 for 25%).")
+      return
+    } else {
+      setPercentageError("")
+    }
+    setLateNightRateIncrease(perc)
+  }
+
+  const onTransportationCostChange = (costS: string) => {
+    const cost = parseFloat(costS)
+    stTransportationCost(costS)
+    if (isNaN(cost) || cost < 0) {
+      setTransportationCostError(
+        "Please enter a valid number for transportation cost."
+      )
+      return
+    } else {
+      setTransportationCostError("")
+    }
+    setTransportationCost(cost)
+  }
+
+  // Currency options
   const currencyOptions = ["¥", "$"]
 
   return (
@@ -134,7 +162,7 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
               <Theme name="surface2">
                 <RadioGroup
                   aria-labelledby="Select one item"
-                  defaultValue={currency}
+                  defaultValue={settings.currency}
                   onValueChange={onCurrencyChange}
                   name="form">
                   <YStack gap="$2">
@@ -161,7 +189,7 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
             {/* Default Hourly Rate */}
             <YStack gap="$2">
               <Text fontWeight="bold" color="$color">
-                Default Hourly Rate ({currency})
+                Default Hourly Rate
               </Text>
               <Input
                 value={hourlyRate}
@@ -169,6 +197,9 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
                 placeholder="e.g., 1122"
                 keyboardType="numeric"
               />
+              {rateError && rateError !== "" && (
+                <Text color="$red10">{rateError}</Text>
+              )}
             </YStack>
 
             {/* Week Start Day Selector */}
@@ -181,7 +212,7 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
               </Text>
 
               <Select
-                value={weekStartDay}
+                value={settings.weekStartDay.toString()}
                 onValueChange={onDayChange}
                 // disablePreventBodyScroll
                 defaultValue="monday">
@@ -229,7 +260,9 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
                 onChangeText={onLateNightStartChange}
                 placeholder="e.g., 22:00"
               />
-              {error && error !== "" && <Text color="$red10">{error}</Text>}
+              {nightError && nightError !== "" && (
+                <Text color="$red10">{nightError}</Text>
+              )}
               <Text fontWeight="bold" color="$color">
                 Late Night Rate Increase (%)
               </Text>
@@ -239,9 +272,33 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
                 placeholder="e.g., 25 for 25%"
                 keyboardType="numeric"
               />
+              {percentageError && percentageError !== "" && (
+                <Text color="$red10">{percentageError}</Text>
+              )}
               <Text fontSize="$3" color="$gray10">
                 Hours after this time will earn extra. Example: 25 means 25%
                 more per hour after 22:00.
+              </Text>
+            </YStack>
+            {/* Transportation Cost round trip */}
+            <YStack gap="$2">
+              <Text fontWeight="bold" color="$color">
+                Transportation Cost (Round Trip)
+              </Text>
+              <Input
+                value={transportationCost}
+                onChangeText={onTransportationCostChange}
+                placeholder="e.g., 440"
+                keyboardType="numeric"
+              />
+              {transportationCostError && transportationCostError !== "" && (
+                <Text color="$red10">{transportationCostError}</Text>
+              )}
+              <Text fontSize="$3" color="$gray10">
+                This is to include the transportation cost when it is paid by
+                your employer. If you pay for transportation yourself, you can
+                leave this as 0 and it won&apos;t be included in the earnings
+                calculation.
               </Text>
             </YStack>
             {/* Theme Toggle */}
@@ -253,7 +310,9 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
                 <Text fontWeight="bold" color="$color">
                   Dark Mode
                 </Text>
-                <Switch checked={isDarkMode} onCheckedChange={onThemeChange}>
+                <Switch
+                  checked={settings.theme === "dark"}
+                  onCheckedChange={onThemeChange}>
                   <Switch.Thumb />
                 </Switch>
               </XStack>

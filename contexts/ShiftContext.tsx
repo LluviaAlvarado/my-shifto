@@ -31,7 +31,6 @@ interface ShiftContextType {
     weekStartDay?: number
   ) => Shift[]
   getStats: () => ShiftStats
-  setDefaultHourlyRate: (rate: number) => Promise<void>
   defaultHourlyRate: number
 }
 
@@ -42,8 +41,11 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [shifts, setShifts] = useState<Shift[]>([])
   const [loading, setLoading] = useState(true)
-  const [defaultHourlyRate, setDefaultHourlyRateState] = useState(1122)
   const { getSettings } = useSettings()
+  const settings = getSettings()
+  const [defaultHourlyRate, setDefaultHourlyRateState] = useState(
+    settings.defaultHourlyRate || 1122
+  )
 
   // Load shifts and settings from AsyncStorage on mount
   useEffect(() => {
@@ -150,9 +152,14 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
             settings.lateNightRateIncrease,
             rate
           )
+
           return {
             hours: acc.hours + hours,
-            earnings: acc.earnings + normalHours * rate + extraEarnings,
+            earnings:
+              acc.earnings +
+              normalHours * rate +
+              extraEarnings +
+              settings.transportationCost,
           }
         },
         { hours: 0, earnings: 0 }
@@ -176,15 +183,6 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
     }
   }
 
-  const setDefaultHourlyRate = async (rate: number) => {
-    try {
-      await AsyncStorage.setItem("defaultHourlyRate", JSON.stringify(rate))
-      setDefaultHourlyRateState(rate)
-    } catch (error) {
-      console.error("Error saving hourly rate:", error)
-    }
-  }
-
   return (
     <ShiftContext.Provider
       value={{
@@ -195,7 +193,6 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
         deleteShift,
         getShifts,
         getStats,
-        setDefaultHourlyRate,
         defaultHourlyRate,
       }}>
       {children}

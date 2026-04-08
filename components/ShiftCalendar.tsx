@@ -186,7 +186,8 @@ export const ShiftCalendar = ({
                 settings.lateNightRateIncrease,
                 rate
               )
-            const earnings = normalHours * rate + extraEarnings
+            const earnings =
+              normalHours * rate + extraEarnings + settings.transportationCost
             return (
               <Card key={shift.id} borderWidth={1} borderColor="$borderColor">
                 <Card.Header>
@@ -230,6 +231,12 @@ export const ShiftCalendar = ({
                       Hourly Rate:{" "}
                       <Text fontWeight="bold" color="$color">
                         {settings.currency + shift.hourlyRate}
+                      </Text>
+                    </Text>
+                    <Text color="$purple11">
+                      Transportation Cost (Round Trip):{" "}
+                      <Text fontWeight="bold" color="$color">
+                        {settings.currency + settings.transportationCost}
                       </Text>
                     </Text>
                     <Text color="$purple11">

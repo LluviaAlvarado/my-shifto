@@ -12,8 +12,13 @@ interface SettingsContextType {
   settings: Settings
   loading: boolean
   getSettings: () => Settings
-  saveSettings: (newSettings: Settings) => Promise<void>
-  setTheme: (theme: "light" | "dark") => void
+  setCurrency: (currency: string) => void
+  setDefaultHourlyRate: (defaultHourlyRate: number) => void
+  setTheme: (theme: string) => void
+  setWeekStartDay: (weekStartDay: number) => void
+  setLateNightStart: (lateNightStart: string) => void
+  setLateNightRateIncrease: (lateNightRateIncrease: number) => void
+  setTransportationCost: (transportationCost: number) => void
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -28,6 +33,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     weekStartDay: 1,
     lateNightStart: "22:00",
     lateNightRateIncrease: 25,
+    transportationCost: 440,
   })
   const [loading, setLoading] = useState(true)
 
@@ -62,9 +68,49 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     return settings
   }
 
-  const setTheme = (theme: "light" | "dark") => {
+  const setCurrency = (currency: string) => {
+    setSettings((prev) => ({ ...prev, currency }))
+    AsyncStorage.setItem("settings", JSON.stringify({ ...settings, currency }))
+  }
+  const setDefaultHourlyRate = (defaultHourlyRate: number) => {
+    setSettings((prev) => ({ ...prev, defaultHourlyRate }))
+    AsyncStorage.setItem(
+      "settings",
+      JSON.stringify({ ...settings, defaultHourlyRate })
+    )
+  }
+  const setTheme = (theme: string) => {
     setSettings((prev) => ({ ...prev, theme }))
     AsyncStorage.setItem("settings", JSON.stringify({ ...settings, theme }))
+  }
+
+  const setWeekStartDay = (weekStartDay: number) => {
+    setSettings((prev) => ({ ...prev, weekStartDay }))
+    AsyncStorage.setItem(
+      "settings",
+      JSON.stringify({ ...settings, weekStartDay })
+    )
+  }
+  const setLateNightStart = (lateNightStart: string) => {
+    setSettings((prev) => ({ ...prev, lateNightStart }))
+    AsyncStorage.setItem(
+      "settings",
+      JSON.stringify({ ...settings, lateNightStart })
+    )
+  }
+  const setLateNightRateIncrease = (lateNightRateIncrease: number) => {
+    setSettings((prev) => ({ ...prev, lateNightRateIncrease }))
+    AsyncStorage.setItem(
+      "settings",
+      JSON.stringify({ ...settings, lateNightRateIncrease })
+    )
+  }
+  const setTransportationCost = (transportationCost: number) => {
+    setSettings((prev) => ({ ...prev, transportationCost }))
+    AsyncStorage.setItem(
+      "settings",
+      JSON.stringify({ ...settings, transportationCost })
+    )
   }
 
   return (
@@ -74,7 +120,13 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         loading,
         getSettings,
         saveSettings,
+        setCurrency,
+        setDefaultHourlyRate,
         setTheme,
+        setWeekStartDay,
+        setLateNightStart,
+        setLateNightRateIncrease,
+        setTransportationCost,
       }}>
       {children}
     </SettingsContext.Provider>

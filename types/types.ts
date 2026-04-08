@@ -3,7 +3,7 @@ export interface Shift {
   date: string // ISO date format
   startTime: string // HH:mm format
   endTime: string // HH:mm format
-  hourlyRate: number // salary per hour
+  hourlyRate: number 
   notes?: string
   createdAt: string
   updatedAt: string
@@ -30,6 +30,7 @@ export interface Settings {
   defaultHourlyRate: number
   weekStartDay: number
   theme: string
-  lateNightStart: string // e.g. "22:00"
+  lateNightStart: string
   lateNightRateIncrease: number // e.g. 25 for 25%
+  transportationCost: number
 }
