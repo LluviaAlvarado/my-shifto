@@ -1,5 +1,5 @@
 import { useSettings } from "@/contexts/SettingsContext"
-import { isValidTime } from "@/utils/shiftUtils"
+import { getLocalDateString, isValidTime } from "@/utils/shiftUtils"
 import { useEffect, useState } from "react"
 import { Button, Dialog, H5, Input, Text, XStack, YStack } from "tamagui"
 import { Shift } from "../types/types"
@@ -110,7 +110,8 @@ export const ShiftModal = ({
                 <>
                   <H5>Shift Details</H5>
                   <Text color="$purple9">
-                    Date: <Text color="$color">{shift.date}</Text>
+                    Date:{" "}
+                    <Text color="$color">{getLocalDateString(shift.date)}</Text>
                   </Text>
                   <Text color="$purple9">
                     Start: <Text color="$color">{shift.startTime}</Text>
@@ -147,7 +148,8 @@ export const ShiftModal = ({
                   <Text color="$purple9">
                     Date:{" "}
                     <Text color="$color">
-                      {date ? date.toISOString().slice(0, 10) : shift?.date}
+                      {getLocalDateString(date) ||
+                        getLocalDateString(shift?.date)}
                     </Text>
                   </Text>
                   <YStack gap="$2">

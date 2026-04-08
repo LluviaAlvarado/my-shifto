@@ -1,6 +1,10 @@
 import { useSettings } from "@/contexts/SettingsContext"
-import { calculateHours } from "@/utils/shiftUtils"
-import { format, isSameDay, parseISO } from "date-fns"
+import {
+  calculateHours,
+  getLocalDate,
+  getLocalDateString,
+} from "@/utils/shiftUtils"
+import { format, isSameDay } from "date-fns"
 import { useState } from "react"
 import { Pressable } from "react-native"
 import { Calendar } from "react-native-calendars"
@@ -35,7 +39,7 @@ export const ShiftCalendar = ({
     const dateStr = day.dateString
     const todayStr = format(new Date(), "yyyy-MM-dd")
     const isToday = dateStr === todayStr
-    const isSelected = isSameDay(parseISO(dateStr), selectedDate)
+    const isSelected = isSameDay(getLocalDateString(dateStr), selectedDate)
     const hasShift = !!shifts.find((s) => s.date === dateStr)
     let backgroundColor = undefined
     let color: any = "$color"
@@ -78,12 +82,12 @@ export const ShiftCalendar = ({
 
   // Handle day press: open modal, set date, set shift if exists
   const handleDayPress = (dateObj: any) => {
-    const date = parseISO(dateObj.dateString)
+    const date = getLocalDate(dateObj.dateString)
     onDateSelected(date)
   }
 
   const handleDayLongPress = (dateObj: any) => {
-    const date = parseISO(dateObj.dateString)
+    const date = getLocalDate(dateObj.dateString)
     onDateSelected(date)
     setModalDate(date)
     setModalShift(shifts.find((s) => s.date === dateObj.dateString) || null)
@@ -175,7 +179,7 @@ export const ShiftCalendar = ({
       {/* Show shift info for selected day */}
       <YStack mt="$2">
         {shifts
-          .filter((s) => isSameDay(parseISO(s.date), selectedDate))
+          .filter((s) => isSameDay(getLocalDate(s.date), selectedDate))
           .map((shift) => {
             const rate = shift.hourlyRate || settings.defaultHourlyRate
             const { hours, normalHours, lateNightHours, extraEarnings } =
@@ -251,7 +255,7 @@ export const ShiftCalendar = ({
               </Card>
             )
           })}
-        {shifts.filter((s) => isSameDay(parseISO(s.date), selectedDate))
+        {shifts.filter((s) => isSameDay(getLocalDate(s.date), selectedDate))
           .length === 0 && (
           <Text color="$purple11">No shift for this day.</Text>
         )}

@@ -1,12 +1,11 @@
 import { Shift, ShiftStats } from "@/types/types"
-import { calculateHours } from "@/utils/shiftUtils"
+import { calculateHours, getLocalDateString } from "@/utils/shiftUtils"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import {
   endOfDay,
   endOfMonth,
   endOfWeek,
   isWithinInterval,
-  parseISO,
   startOfDay,
   startOfMonth,
   startOfWeek,
@@ -107,7 +106,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
     if (!filters) return shifts
 
     return shifts.filter((shift) => {
-      const shiftDate = parseISO(shift.date)
+      const shiftDate = getLocalDateString(shift.date)
 
       if (filters.date) {
         const start = startOfDay(filters.date)

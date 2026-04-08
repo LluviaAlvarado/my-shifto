@@ -1,3 +1,5 @@
+import { format } from "date-fns"
+
 export const calculateHours = (
     startTime: string,
     endTime: string,
@@ -46,3 +48,25 @@ export const calculateHours = (
  export const isValidTime = (time: string) => {
     return /^([01]\d|2[0-3]):([0-5]\d)$/.test(time)
   }
+
+// Helper to get local date string (yyyy-MM-dd)
+export const getLocalDateString = (date: string | Date | undefined | null) => {
+  if (!date) return ""
+  if (typeof date === "string") {
+    // Parse as local date (not UTC)
+    const [y, m, d] = date.split("-")
+    return format(new Date(Number(y), Number(m) - 1, Number(d)), "yyyy-MM-dd")
+  }
+  return format(date, "yyyy-MM-dd")
+}
+
+// Helper to get local date
+export const getLocalDate = (date: string | Date | undefined | null): Date => {
+  if (!date) return new Date()
+  if (typeof date === "string") {
+    // Parse as local date (not UTC)
+    const [y, m, d] = date.split("-")
+    return new Date(Number(y), Number(m) - 1, Number(d))
+  }
+  return new Date(date)
+}
