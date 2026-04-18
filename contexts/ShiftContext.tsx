@@ -245,9 +245,15 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
       const currentPayDayThisMonth = new Date(
         thisYear,
         thisMonth,
-        settings.payDay
+        settings.payDay,
+        23,
+        59,
+        59,
+        999
       )
-      if (today > currentPayDayThisMonth) {
+      if (
+        new Date(thisYear, thisMonth, today.getDate()) > currentPayDayThisMonth
+      ) {
         periodStart = new Date(thisYear, thisMonth, 1)
         periodEnd = endOfMonth(new Date(thisYear, thisMonth, 1))
       }
