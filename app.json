@@ -7,9 +7,9 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myshifto",
     "userInterfaceStyle": "automatic",
-    //"newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.amika79sorganization.myshifto"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,9 +18,13 @@
         "backgroundImage": "./assets/images/icon.png",
         "monochromeImage": "./assets/images/icon.png"
       },
-      //"edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.amika79sorganization.myshifto"
+      "package": "com.amika79sorganization.myshifto",
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET"
+      ]
     },
     "web": {
       "output": "static",

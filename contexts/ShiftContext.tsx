@@ -2,6 +2,7 @@ import { Shift, ShiftStats } from "@/types/types"
 import { calculateHours, getLocalDateString } from "@/utils/shiftUtils"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import {
+  addDays,
   endOfDay,
   endOfMonth,
   endOfWeek,
@@ -29,6 +30,7 @@ interface ShiftContextType {
     filters?: { date?: Date; week?: Date; month?: Date },
     weekStartDay?: number
   ) => Shift[]
+  getNextPayAmount: () => number
   loadShifts: (newShifts: Shift[]) => Promise<void>
   getStats: () => ShiftStats
   defaultHourlyRate: number
@@ -155,7 +157,9 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
             shift.endTime,
             settings.lateNightStart,
             settings.lateNightRateIncrease,
-            rate
+            rate,
+            settings.weekendRateIncrease,
+            shift.date
           )
 
           return {
@@ -188,6 +192,91 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
     }
   }
 
+  const getNextPayAmount = (): number => {
+    const settings = getSettings()
+    const today = new Date()
+    let periodStart: Date
+    let periodEnd: Date
+    const weekStartDay =
+      typeof settings.weekStartDay === "number" ? settings.weekStartDay : 1
+    const weekStartsOn = weekStartDay as 0 | 1 | 2 | 3 | 4 | 5 | 6
+
+    if (settings.payFrequency === "weekly") {
+      // Previous natural week (e.g., Mon-Sun or user weekStartDay)
+      periodStart = startOfWeek(addDays(today, -7), { weekStartsOn })
+      periodEnd = endOfWeek(addDays(today, -7), { weekStartsOn })
+      // For weekly, check if today is past the pay day (day of week)
+      if (settings.payDay !== undefined && today.getDay() > settings.payDay) {
+        periodStart = startOfWeek(today, { weekStartsOn })
+        periodEnd = endOfWeek(today, { weekStartsOn })
+      }
+    } else if (settings.payFrequency === "biweekly") {
+      // Previous natural biweek: two weeks ago (start of week) to last week (end of week)
+      periodStart = startOfWeek(addDays(today, -14), {
+        weekStartsOn,
+      })
+      periodEnd = endOfWeek(addDays(today, -7), {
+        weekStartsOn,
+      })
+      // For biweekly, check if today is past the pay day (week parity + day of week)
+      if (settings.payDay !== undefined) {
+        // Calculate which week of the biweek we're in
+        const weeksSinceEpoch = Math.floor(
+          today.getTime() / (7 * 24 * 60 * 60 * 1000)
+        )
+        const isPayWeek = weeksSinceEpoch % 2 === 0
+        const todayDayOfWeek = today.getDay()
+
+        // If it's a pay week and we're past the pay day, or if it's after the pay week
+        if ((isPayWeek && todayDayOfWeek > settings.payDay) || !isPayWeek) {
+          periodStart = startOfWeek(today, { weekStartsOn })
+          periodEnd = endOfWeek(addDays(today, 7), { weekStartsOn })
+        }
+      }
+    } else {
+      // Monthly (default): previous natural month
+      const thisMonth = today.getMonth()
+      const thisYear = today.getFullYear()
+      const prevMonth = thisMonth === 0 ? 11 : thisMonth - 1
+      const prevMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear
+      periodStart = new Date(prevMonthYear, prevMonth, 1)
+      periodEnd = endOfMonth(new Date(prevMonthYear, prevMonth, 1))
+      // For monthly, check if today is past the day of month
+      const currentPayDayThisMonth = new Date(
+        thisYear,
+        thisMonth,
+        settings.payDay
+      )
+      if (today > currentPayDayThisMonth) {
+        periodStart = new Date(thisYear, thisMonth, 1)
+        periodEnd = endOfMonth(new Date(thisYear, thisMonth, 1))
+      }
+    }
+    // Sum all shifts in [periodStart, periodEnd]
+    const periodShifts = shifts.filter((shift) => {
+      const [y, m, d] = shift.date.split("-")
+      const shiftDate = new Date(Number(y), Number(m) - 1, Number(d))
+      return shiftDate >= periodStart && shiftDate <= periodEnd
+    })
+
+    // Calculate total earnings for the period
+    return periodShifts.reduce((sum, shift) => {
+      const rate = shift.hourlyRate || defaultHourlyRate
+      const { normalHours, extraEarnings } = calculateHours(
+        shift.startTime,
+        shift.endTime,
+        settings.lateNightStart,
+        settings.lateNightRateIncrease,
+        rate,
+        settings.weekendRateIncrease,
+        shift.date
+      )
+      return (
+        sum + normalHours * rate + extraEarnings + settings.transportationCost
+      )
+    }, 0)
+  }
+
   return (
     <ShiftContext.Provider
       value={{
@@ -197,6 +286,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
         updateShift,
         deleteShift,
         getShifts,
+        getNextPayAmount,
         loadShifts,
         getStats,
         defaultHourlyRate,

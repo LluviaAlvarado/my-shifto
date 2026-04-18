@@ -11,7 +11,7 @@ export default function Index() {
 
 function HomeScreen() {
   const { getSettings } = useSettings()
-  const { getStats, loading } = useShifts()
+  const { getStats, loading, getNextPayAmount } = useShifts()
   const settings = getSettings()
   const stats = getStats()
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -54,6 +54,11 @@ function HomeScreen() {
             }`}
             value={stats.weeklyHours.toFixed(2)}
             unit="h"
+          />
+          <StatCard
+            label="Next Pay Amount"
+            value={getNextPayAmount().toFixed(2)}
+            unit={settings.currency}
           />
           <StatCard
             label="This Week's Earnings"

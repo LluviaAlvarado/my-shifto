@@ -46,7 +46,10 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
     setWeekStartDay,
     setLateNightStart,
     setLateNightRateIncrease,
+    setWeekendRateIncrease,
     setTransportationCost,
+    setPayFrequency,
+    setPayDay,
   } = useSettings()
   const settings = getSettings()
   const { shifts, loadShifts } = useShifts()
@@ -57,13 +60,19 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
   const [lateNightRateIncrease, stLateNightRateIncrease] = useState(
     settings.lateNightRateIncrease.toString()
   )
+  const [weekendRateIncrease, stWeekendRateIncrease] = useState(
+    settings.weekendRateIncrease?.toString() || "0"
+  )
   const [transportationCost, stTransportationCost] = useState(
     settings.transportationCost.toString()
   )
+  const [payDay, stPayDay] = useState(settings.payDay?.toString() || "15")
   const [rateError, setRateError] = useState("")
   const [nightError, setNightError] = useState("")
   const [percentageError, setPercentageError] = useState("")
   const [transportationCostError, setTransportationCostError] = useState("")
+  const [payDayError, setPayDayError] = useState("")
+  const [weekendError, setWeekendError] = useState("")
 
   const handleExport = async () => {
     try {
@@ -103,17 +112,24 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
       const data = JSON.parse(json)
       if (!data.settings || !data.shifts)
         throw new Error("Invalid backup file.")
-      setCurrency(data.settings.currency)
-      stHourlyRate(data.settings.defaultHourlyRate.toString())
-      setDefaultHourlyRate(data.settings.defaultHourlyRate)
-      setTheme(data.settings.theme)
-      setWeekStartDay(data.settings.weekStartDay)
-      stLateNightStart(data.settings.lateNightStart)
-      setLateNightStart(data.settings.lateNightStart)
-      stLateNightRateIncrease(data.settings.lateNightRateIncrease.toString())
-      setLateNightRateIncrease(data.settings.lateNightRateIncrease)
-      stTransportationCost(data.settings.transportationCost.toString())
-      setTransportationCost(data.settings.transportationCost)
+      setCurrency(data.settings.currency ?? "¥")
+      stHourlyRate((data.settings.defaultHourlyRate ?? 1122).toString())
+      setDefaultHourlyRate(data.settings.defaultHourlyRate ?? 1122)
+      setWeekendRateIncrease(
+        (data.settings.weekendRateIncrease ?? 0).toString()
+      )
+      setTheme(data.settings.theme ?? "dark")
+      setWeekStartDay(data.settings.weekStartDay ?? 1)
+      stLateNightStart(data.settings.lateNightStart ?? "22:00")
+      setLateNightStart(data.settings.lateNightStart ?? "22:00")
+      stLateNightRateIncrease(
+        (data.settings.lateNightRateIncrease ?? 25).toString()
+      )
+      setLateNightRateIncrease(data.settings.lateNightRateIncrease ?? 25)
+      stTransportationCost((data.settings.transportationCost ?? 0).toString())
+      setTransportationCost(data.settings.transportationCost ?? 0)
+      setPayFrequency(data.settings.payFrequency ?? "monthly")
+      setPayDay(data.settings.payDay ?? 15)
       await loadShifts(data.shifts)
       Alert.alert("Import Successful", "Your data has been imported.")
     } catch (e) {
@@ -174,6 +190,18 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
     setLateNightRateIncrease(perc)
   }
 
+  const onWeekendRateIncreaseChange = (percentage: string) => {
+    const perc = parseFloat(percentage)
+    stWeekendRateIncrease(percentage)
+    if (isNaN(perc) || perc < 0) {
+      setWeekendError("Please enter a valid percentage (e.g., 25 for 25%).")
+      return
+    } else {
+      setWeekendError("")
+    }
+    setWeekendRateIncrease(perc)
+  }
+
   const onTransportationCostChange = (costS: string) => {
     const cost = parseFloat(costS)
     stTransportationCost(costS)
@@ -188,6 +216,26 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
     setTransportationCost(cost)
   }
 
+  const onPayDayChange = (dayS: string) => {
+    const day = parseInt(dayS)
+    stPayDay(dayS)
+
+    if (settings.payFrequency === "monthly") {
+      if (day < 1 || day > 28) {
+        setPayDayError("For monthly, pay day must be between 1 and 28.")
+        return false
+      }
+    } else {
+      if (day < 0 || day > 6) {
+        setPayDayError(
+          "For weekly/biweekly, pay day must be 0 (Sun) to 6 (Sat)."
+        )
+        return false
+      }
+    }
+    setPayDayError("")
+    setPayDay(day)
+  }
   // Currency options
   const currencyOptions = ["¥", "$"]
 
@@ -267,7 +315,66 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
                 <Text color="$red10">{rateError}</Text>
               )}
             </YStack>
-
+            {/* Pay Day*/}
+            <YStack gap="$2">
+              <Text fontWeight="bold" color="$color">
+                Pay Frequency
+              </Text>
+              <Select
+                value={settings.payFrequency || "monthly"}
+                onValueChange={(val) => {
+                  setPayFrequency(val as "weekly" | "biweekly" | "monthly")
+                }}>
+                <Select.Trigger borderRadius="$4">
+                  <Select.Value placeholder="Select frequency" />
+                </Select.Trigger>
+                <Adapt when="max-md" platform="touch">
+                  <Sheet dismissOnSnapToBottom transition="quick">
+                    <Sheet.Frame>
+                      <Adapt.Contents />
+                    </Sheet.Frame>
+                    <Sheet.Overlay
+                      transition="quick"
+                      enterStyle={{ opacity: 0 }}
+                      exitStyle={{ opacity: 0 }}
+                    />
+                  </Sheet>
+                </Adapt>
+                <Select.Content>
+                  <Select.ScrollUpButton />
+                  <Select.Viewport>
+                    <Select.Group>
+                      <Select.Item value="weekly" index={0}>
+                        <Select.ItemText>Weekly</Select.ItemText>
+                      </Select.Item>
+                      <Select.Item value="biweekly" index={1}>
+                        <Select.ItemText>Biweekly</Select.ItemText>
+                      </Select.Item>
+                      <Select.Item value="monthly" index={2}>
+                        <Select.ItemText>Monthly</Select.ItemText>
+                      </Select.Item>
+                    </Select.Group>
+                  </Select.Viewport>
+                  <Select.ScrollDownButton />
+                </Select.Content>
+              </Select>
+              <Text fontWeight="bold" color="$color">
+                {settings.payFrequency === "monthly"
+                  ? "Pay Day (1-28)"
+                  : "Pay Day (0=Sun, ... 6=Sat)"}
+              </Text>
+              <Input
+                value={payDay.toString()}
+                onChangeText={onPayDayChange}
+                keyboardType="numeric"
+                placeholder={
+                  settings.payFrequency === "monthly"
+                    ? "e.g., 25 for 25th"
+                    : "e.g., 5 for Friday"
+                }
+              />
+              {payDayError !== "" && <Text color="$red10">{payDayError}</Text>}
+            </YStack>
             {/* Week Start Day Selector */}
             <YStack gap="$2">
               <Text fontWeight="bold" color="$color">
@@ -344,6 +451,26 @@ export const SettingsSheet = ({ open, onOpenChange }: SettingsSheetProps) => {
               <Text fontSize="$3" color="$gray10">
                 Hours after this time will earn extra. Example: 25 means 25%
                 more per hour after 22:00.
+              </Text>
+            </YStack>
+            {/* Weekends extra pay */}
+            <YStack gap="$2">
+              <Text fontWeight="bold" color="$color">
+                Weekend hours rate increase (%)
+              </Text>
+              <Input
+                value={weekendRateIncrease}
+                onChangeText={onWeekendRateIncreaseChange}
+                placeholder="e.g., 25 for 25%"
+                keyboardType="numeric"
+              />
+              {weekendError && weekendError !== "" && (
+                <Text color="$red10">{weekendError}</Text>
+              )}
+              <Text fontSize="$3" color="$gray10">
+                Leave this as 0 if you don&apos;t have a different rate for
+                weekends. This is the percentage increase for hours worked on
+                Saturdays and Sundays.
               </Text>
             </YStack>
             {/* Transportation Cost round trip */}

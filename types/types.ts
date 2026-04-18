@@ -33,4 +33,7 @@ export interface Settings {
   lateNightStart: string
   lateNightRateIncrease: number // e.g. 25 for 25%
   transportationCost: number
+  payFrequency?: "weekly" | "biweekly" | "monthly"
+  payDay?: number // 0-6 for weekly/biweekly (Sun-Sat), 1-28 for monthly
+  weekendRateIncrease?: number // e.g. 25 for 25%
 }
