@@ -182,16 +182,14 @@ export const ShiftCalendar = ({
           .filter((s) => isSameDay(getLocalDate(s.date), selectedDate))
           .map((shift) => {
             const rate = shift.hourlyRate || settings.defaultHourlyRate
-            const { hours, normalHours, lateNightHours, extraEarnings } =
-              calculateHours(
-                shift.startTime,
-                shift.endTime,
-                settings.lateNightStart,
-                settings.lateNightRateIncrease,
-                rate
-              )
-            const earnings =
-              normalHours * rate + extraEarnings + settings.transportationCost
+            const { hours, lateNightHours, totalEarnings } = calculateHours(
+              shift.startTime,
+              shift.endTime,
+              settings.lateNightStart,
+              settings.lateNightRateIncrease,
+              rate
+            )
+            const earnings = totalEarnings + settings.transportationCost
             return (
               <Card key={shift.id} borderWidth={1} borderColor="$borderColor">
                 <Card.Header>

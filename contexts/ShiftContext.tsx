@@ -152,7 +152,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
       return shiftList.reduce(
         (acc, shift) => {
           const rate = shift.hourlyRate || defaultHourlyRate
-          const { hours, normalHours, extraEarnings } = calculateHours(
+          const { hours, totalEarnings } = calculateHours(
             shift.startTime,
             shift.endTime,
             settings.lateNightStart,
@@ -165,10 +165,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
           return {
             hours: acc.hours + hours,
             earnings:
-              acc.earnings +
-              normalHours * rate +
-              extraEarnings +
-              settings.transportationCost,
+              acc.earnings + totalEarnings + settings.transportationCost,
           }
         },
         { hours: 0, earnings: 0 }
@@ -268,7 +265,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
     // Calculate total earnings for the period
     return periodShifts.reduce((sum, shift) => {
       const rate = shift.hourlyRate || defaultHourlyRate
-      const { normalHours, extraEarnings } = calculateHours(
+      const { totalEarnings } = calculateHours(
         shift.startTime,
         shift.endTime,
         settings.lateNightStart,
@@ -277,9 +274,7 @@ export const ShiftProvider: React.FC<{ children: ReactNode }> = ({
         settings.weekendRateIncrease,
         shift.date
       )
-      return (
-        sum + normalHours * rate + extraEarnings + settings.transportationCost
-      )
+      return sum + totalEarnings + settings.transportationCost
     }, 0)
   }
 
